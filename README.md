@@ -1,67 +1,56 @@
 # Luxury Briefing
 
-Luxury Briefing is a full-stack luxury-intelligence demo: a feed of scored market signals, a personal vault, and curated watch windows for auctions and events.
+Luxury Briefing is a small full-stack application I built to collect and review luxury-market news and events.
 
-## What It Does
+[![CI](https://github.com/rishabhlakra/luxury-briefing/actions/workflows/ci.yml/badge.svg)](https://github.com/rishabhlakra/luxury-briefing/actions/workflows/ci.yml)
 
-- Signals feed with search, theme filter, and sort by newest, confidence, or rarity
-- Drawer-based article briefing with:
-  - short card summary
-  - richer briefing summary
-  - key takeaways
-  - extracted entities
-  - freshness diagnostics
-- Vault workflow for saving and unsaving signals
-- Watch Windows timeline for upcoming events
-- Light and dark UI themes
+## What it does
 
-## Stack
+- reads articles from a set of RSS feeds
+- normalizes and stores them in PostgreSQL
+- marks items with a theme, confidence score, rarity label, and freshness status
+- supports text search, filtering, and sorting
+- lets a user save items to a personal vault
+- shows upcoming auction and event windows
 
-### Frontend
+The confidence and rarity values are rule-based. They are meant to help organize a feed, not predict the market.
 
-- React
-- TypeScript
-- Vite
-- CSS-only theming and glass UI treatment
+## How it is built
 
-### Backend
+```text
+RSS feeds and event sources
+            |
+            v
+Python ingestion -> PostgreSQL -> FastAPI -> React / TypeScript interface
+```
 
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- RSS ingestion via `feedparser`
+- **Frontend:** React, TypeScript, Vite, CSS
+- **Backend:** Python, FastAPI, SQLAlchemy
+- **Database:** PostgreSQL
+- **Local setup:** Docker Compose
+- **Checks:** ESLint, TypeScript build, Python compilation, GitHub Actions
 
-### Local Dev
+Repeated ingestion updates existing records by signal ID or source URL instead of inserting another copy. Search, filters, and sorting are handled by the API. Saved items use a separate relational table and idempotent save/remove endpoints.
 
-- Docker Compose for database / full-stack container runs
-- Python `venv` for local backend execution
+## Run it locally
 
-## Project Structure
+The simplest option is Docker Compose:
 
-- `frontend/` — React app
-- `backend/` — FastAPI app, models, ingest, event scraping
-- `docker-compose.yml` — local container stack
+```bash
+git clone https://github.com/rishabhlakra/luxury-briefing.git
+cd luxury-briefing
+docker compose up --build
+```
 
-## Prerequisites
+The interface will be available at `http://127.0.0.1:5173` once the services are running.
 
-- Node.js 18+
-- Python 3.11+
-- Docker Desktop or a local PostgreSQL instance
-- `npm` available in the shell
-
-## Run Locally
-
-### Option A: Local Backend + Docker Postgres
-
-From the repository root:
-
-1. Start Postgres:
+To run the applications separately, start PostgreSQL first:
 
 ```bash
 docker compose up -d db
 ```
 
-2. Start backend:
+Then start the API:
 
 ```bash
 cd backend
@@ -71,9 +60,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-If a virtual environment already exists, activate that instead of creating a new one.
-
-3. In a second terminal, start frontend:
+In another terminal, start the frontend:
 
 ```bash
 cd frontend
@@ -81,64 +68,27 @@ npm install
 npm run dev
 ```
 
-4. Open the local URL printed by Vite in the terminal.
+Set `VITE_API_BASE` if the API is not running at `http://127.0.0.1:8000`.
 
-This is usually:
+## API routes
+
+| Method | Route | Use |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `GET` | `/themes` | List themes |
+| `GET` | `/signals` | Search, filter, and sort signals |
+| `GET` | `/saved` | List saved signals |
+| `POST` | `/save/{signal_id}` | Save a signal |
+| `DELETE` | `/save/{signal_id}` | Remove a saved signal |
+| `POST` | `/ingest` | Refresh RSS data |
+| `GET` | `/events` | List upcoming events |
+| `GET` | `/events/curated` | List curated event windows |
+
+## Project layout
 
 ```text
-http://127.0.0.1:5173
+backend/           FastAPI application, database models, and ingestion
+frontend/          React and TypeScript application
+.github/workflows  CI checks
+docker-compose.yml Local PostgreSQL, API, and frontend services
 ```
-
-but it may differ if that port is already in use.
-
-### Option B: Full Docker
-
-From the repository root:
-
-```bash
-docker compose up --build
-```
-
-Then open the frontend URL exposed by the compose stack on your machine.
-
-## Enrichment Workflow
-
-The backend enriches each signal during ingest with:
-
-- confidence score
-- rarity classification
-- short card summary
-- richer briefing summary
-- key takeaways
-- extracted entities
-- freshness status
-
-If you change ingest logic or add new signal fields, restart the backend and re-run ingest:
-
-```bash
-curl -sS -X POST "http://127.0.0.1:8000/ingest"
-```
-
-If the API is running on a different host or port, use that base URL instead.
-
-## API Endpoints
-
-- `GET /health`
-- `GET /themes`
-- `GET /signals`
-- `GET /saved`
-- `POST /save/{signal_id}`
-- `DELETE /save/{signal_id}`
-- `POST /ingest`
-- `GET /events`
-- `GET /events/curated`
-
-## Notes
-
-- Freshness is derived from article date:
-  - `Fresh`: 0-3 days
-  - `Recent`: 4-14 days
-  - `Aging`: 15-30 days
-  - `Stale`: 31+ days
-- Existing databases are updated on backend startup with the required signal columns.
-- If you run the backend locally, make sure the frontend points at the correct API base URL via `VITE_API_BASE` when needed.

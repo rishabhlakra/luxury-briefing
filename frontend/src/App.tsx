@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 
 type Signal = {
@@ -170,15 +170,6 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeDrawer();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selected, isDrawerClosing]);
-
   function openDrawer(signal: Signal) {
     if (drawerCloseTimerRef.current !== null) {
       window.clearTimeout(drawerCloseTimerRef.current);
@@ -189,7 +180,7 @@ export default function App() {
     setSelected(signal);
   }
 
-  function closeDrawer() {
+  const closeDrawer = useCallback(() => {
     if (!selected || isDrawerClosing) return;
 
     setIsDrawerClosing(true);
@@ -198,7 +189,16 @@ export default function App() {
       setIsDrawerClosing(false);
       drawerCloseTimerRef.current = null;
     }, DRAWER_CLOSE_MS);
-  }
+  }, [isDrawerClosing, selected]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeDrawer();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [closeDrawer]);
 
 
   async function loadEvents() {
@@ -238,7 +238,6 @@ export default function App() {
 
   useEffect(() => {
     if (subView === "events") loadEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subView]);
 
   const drawerPoints = useMemo(() => {
@@ -634,7 +633,9 @@ export default function App() {
                   <select
                     className="select"
                     value={sort}
-                    onChange={(e) => setSort(e.target.value as any)}
+                    onChange={(e) =>
+                      setSort(e.target.value as "date" | "confidence" | "rarity")
+                    }
                   >
                     <option value="date">Newest</option>
                     <option value="confidence">Confidence</option>
