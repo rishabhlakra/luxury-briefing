@@ -4,6 +4,8 @@ A full-stack briefing workspace that turns luxury-market feeds and event calenda
 
 [![CI](https://github.com/rishabhlakra/luxury-briefing/actions/workflows/ci.yml/badge.svg)](https://github.com/rishabhlakra/luxury-briefing/actions/workflows/ci.yml)
 
+Development started as a local prototype in February 2026. I published the repository in October 2026 and kept the original local commit history, so the commits predate the GitHub repository creation date.
+
 ## Why I built it
 
 Luxury reporting arrives as a mix of launches, transactions, campaigns, auctions, and design coverage. Reading every source is slow; a flat feed makes the important items hard to separate from routine coverage. I built Luxury Briefing to collect that material in one place, add transparent prioritisation signals, and support a faster review workflow without pretending that a rule-based score can predict the market.
@@ -201,6 +203,7 @@ frontend/
 .github/workflows/
   ci.yml                Frontend and backend checks
 docker-compose.yml      Local database, API, and web stack
+THIRD_PARTY_NOTICES.md  Attribution for the adapted GlassSurface component
 ```
 
 ## Checks

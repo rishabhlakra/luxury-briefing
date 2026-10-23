@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import "./GlassSurface.css";
 
+/*
+ * Adapted from React Bits' GlassSurface component by David Haz.
+ * https://github.com/DavidHDev/react-bits/tree/main/src/content/Components/GlassSurface
+ * Used under the MIT + Commons Clause license; see THIRD_PARTY_NOTICES.md.
+ */
+
 export interface GlassSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
   width?: number | string;
